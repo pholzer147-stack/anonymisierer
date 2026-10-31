@@ -1,0 +1,9 @@
+Vorname	Nachname	Straße	PLZ	Ort	Telefon	E-Mail	Geburtsdatum	Funktion	Bemerkung
+Anna	Schmidt	Lindenweg 4	79098	Freiburg	0761 123456	anna.schmidt@example.org	12.03.1988	Kassenwartin	Übernimmt ab Mai die Vertretung für Jonas Weber.
+Tom	Schmidt	Lindenweg 4	79098	Freiburg	0761 123456	tom.s@example.org	02.07.2012	Jugend	Bruder von Anna, Beitrag zahlt Schmidt (Familie).
+Jonas	Weber	Am Bach 17	79100	Freiburg	0170 9876543	j.weber@example.net	30.11.1975	Vorsitzender	Weber leitet die Sitzung am 14.11.
+Fatma	Yılmaz	Kirchstr. 2	79104	Freiburg	+49 761 555 0101	fatma.y@example.com	05.05.1990	Trainerin	Annas Vorschlag zum Hallenplan mit Fatma besprechen.
+Klaus-Peter	Lange	Gartenweg 9	79111	Freiburg	0761 44 33 22	kp.lange@example.de	17.01.1960	Kassenprüfer	Das Training dauerte zu lange; Lange bittet um Rückruf unter 0151 22233344.
+Marie	von Berg	Schlossallee 1	79117	Freiburg	0761 777888	marie@example.org	23.09.2001	Schriftführerin	Marie von Berg schickt das Protokoll an Petra Lindner (Stadt).
+Lukas	Nowak	Ringstr. 12	79115	Freiburg	0761 202020	lukas.nowak@example.org	08.08.1999	Mitglied	IBAN DE89 3704 0044 0532 0130 00 für Erstattung, Rücksprache mit Nowak, Lukas.
+Jonas	Weber	Am Bach 17	79100	Freiburg	0170 9876543	j.weber@example.net	30.11.1975	Kassenprüfer	Doppelter Eintrag (zweite Funktion).
