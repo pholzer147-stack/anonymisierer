@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Datenschutz: Der Browser blockiert jede Netzwerkverbindung dieser Seite. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="data:,">
+<title>Anonymisierer</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --text: #1d2330; --muted: #5d6677;
+    --line: #d8dce3; --accent: #1f6feb; --accent-text: #ffffff;
+    --ok: #1a7f37; --warn-bg: #fff4d6; --warn-text: #6b4e00;
+    --danger: #c62828; --field: #ffffff; --chip: #eef2f8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --card: #1b2029; --text: #e6e9ef; --muted: #a0a8b8;
+      --line: #333a47; --accent: #4c8dff; --accent-text: #0b1020;
+      --ok: #4ac26b; --warn-bg: #3a3014; --warn-text: #f3d68a;
+      --danger: #ff6b6b; --field: #141820; --chip: #252c38;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 16px 16px 48px; }
+  h1 { font-size: 1.4rem; margin: 4px 0 4px; }
+  h2 { font-size: 1.1rem; margin: 0 0 8px; }
+  .lead { color: var(--muted); margin: 0 0 14px; font-size: .95rem; }
+  .badge {
+    display: inline-block; background: var(--chip); border-radius: 999px;
+    padding: 4px 12px; font-size: .85rem; color: var(--muted); margin-bottom: 14px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tab {
+    flex: 1; min-height: 48px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--card); color: var(--text); font-size: 1rem; font-weight: 600; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  label.field { display: block; font-weight: 600; margin: 12px 0 6px; }
+  label.field:first-child { margin-top: 0; }
+  .hint { color: var(--muted); font-size: .88rem; margin: 4px 0 0; }
+  textarea, select {
+    width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--field);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px;
+  }
+  textarea { min-height: 150px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }
+  textarea.small { min-height: 90px; }
+  textarea[readonly] { background: var(--bg); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+  button.btn {
+    min-height: 46px; padding: 0 18px; font: inherit; font-weight: 600; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer;
+  }
+  button.btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  button.btn.danger { color: var(--danger); }
+  button.btn:disabled { opacity: .5; cursor: default; }
+  .btn.wide { flex: 1 1 200px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; cursor: pointer; }
+  .check input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+  .cols { margin-top: 8px; border-top: 1px solid var(--line); }
+  .col {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .col .info { flex: 1 1 180px; min-width: 0; }
+  .col .head { font-weight: 600; overflow-wrap: anywhere; }
+  .col .sample { color: var(--muted); font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .col .opts { display: flex; gap: 8px; }
+  .pill {
+    display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px;
+    border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-size: .92rem; user-select: none;
+  }
+  .pill input { width: 18px; height: 18px; margin: 0; }
+  .pill.on-name { background: var(--chip); border-color: var(--accent); }
+  .pill.on-del { background: var(--chip); border-color: var(--danger); }
+  .status { font-size: .9rem; color: var(--muted); margin-top: 6px; }
+  .msgs { margin: 10px 0 0; padding: 0; list-style: none; }
+  .msgs li { background: var(--warn-bg); color: var(--warn-text); border-radius: 8px; padding: 8px 10px; margin-top: 6px; font-size: .9rem; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .err { color: var(--danger); font-weight: 600; }
+  table.key { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: .95rem; }
+  table.key th, table.key td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  table.key td:first-child { font-family: ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; width: 1%; }
+  .keybox { max-height: 320px; overflow: auto; }
+  .warnbox { background: var(--warn-bg); color: var(--warn-text); border-radius: 8px; padding: 10px; font-size: .9rem; margin-top: 10px; }
+  [hidden] { display: none !important; }
+  input[type=file] { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Vereinslisten pseudonymisieren</h1>
+  <p class="lead">Namen werden durch Kürzel (K01, K02 …) ersetzt, sensible Spalten entfernt. Später lassen sich die echten Namen wieder einsetzen.</p>
+  <span class="badge">🔒 Läuft nur in diesem Browser. Nichts wird gesendet oder gespeichert.</span>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-enc" aria-selected="true" aria-controls="panel-enc">Verschlüsseln</button>
+    <button class="tab" role="tab" id="tab-dec" aria-selected="false" aria-controls="panel-dec">Entschlüsseln</button>
+  </div>
+
+  <!-- ============ VERSCHLÜSSELN ============ -->
+  <section id="panel-enc" role="tabpanel" aria-labelledby="tab-enc">
+    <div class="card">
+      <label class="field" for="input">1. Liste einfügen</label>
+      <textarea id="input" placeholder="Aus Excel kopieren und hier einfügen (mit Kopfzeile) – oder einfachen Text einfügen." spellcheck="false" autocomplete="off"></textarea>
+      <div class="row">
+        <select id="mode" aria-label="Format" style="flex:1 1 220px">
+          <option value="auto">Format: automatisch erkennen</option>
+          <option value="tab">Tabelle (tabulatorgetrennt, aus Excel)</option>
+          <option value="semi">Tabelle (Semikolon, CSV)</option>
+          <option value="text">Einfacher Text</option>
+        </select>
+      </div>
+      <label class="check" id="headerWrap"><input type="checkbox" id="hasHeader" checked> <span>Erste Zeile ist Kopfzeile</span></label>
+      <p class="status" id="detectStatus"></p>
+    </div>
+
+    <div class="card" id="colsCard" hidden>
+      <h2>2. Spalten auswählen</h2>
+      <p class="hint">„Name“ = wird zum Kürzel. „Entfernen“ = Spalte fällt komplett weg. Vorschläge sind anhand der Überschriften vorausgewählt – bitte prüfen.</p>
+      <div class="cols" id="cols"></div>
+      <p class="hint" id="groupHint"></p>
+    </div>
+
+    <div class="card">
+      <label class="field" for="extraNames"><span id="extraNum">3.</span> Weitere Namen (optional)</label>
+      <textarea id="extraNames" class="small" placeholder="Ein Name pro Zeile, z. B.&#10;Petra Lindner&#10;Herr Okafor" spellcheck="false" autocomplete="off"></textarea>
+      <p class="hint">Diese Namen werden ebenfalls durch Kürzel ersetzt – überall im Text. Namen aus den Namensspalten werden automatisch auch im Freitext ersetzt.</p>
+      <label class="check"><input type="checkbox" id="scrubContact" checked> <span>E-Mail-Adressen, Telefonnummern und IBANs im Text entfernen</span></label>
+      <div class="row">
+        <button class="btn primary wide" id="btnEncrypt">Verschlüsseln</button>
+      </div>
+    </div>
+
+    <div class="card" id="resultCard" hidden>
+      <h2>Ergebnis</h2>
+      <p class="status" id="encStats"></p>
+      <ul class="msgs" id="encMsgs"></ul>
+      <textarea id="output" readonly spellcheck="false"></textarea>
+      <div class="row">
+        <button class="btn primary wide" id="btnCopyOut">Kopieren</button>
+        <span class="status" id="copyOutStatus" aria-live="polite"></span>
+      </div>
+      <p class="hint">Bitte vor dem Einfügen kurz durchlesen: Namen, die das Werkzeug nicht kennt, bleiben stehen.<br>
+      Tipp für Claude: „Bitte verwende die Kürzel (K01, K02 …) unverändert in deiner Antwort.“</p>
+    </div>
+  </section>
+
+  <!-- ============ ENTSCHLÜSSELN ============ -->
+  <section id="panel-dec" role="tabpanel" aria-labelledby="tab-dec" hidden>
+    <div class="card">
+      <label class="field" for="decInput">Text mit Kürzeln einfügen</label>
+      <textarea id="decInput" placeholder="z. B. die Antwort von Claude mit K01, K02 …" spellcheck="false" autocomplete="off"></textarea>
+      <p class="status" id="decKeyStatus"></p>
+      <div class="row">
+        <button class="btn primary wide" id="btnDecrypt">Echte Namen einsetzen</button>
+      </div>
+    </div>
+    <div class="card" id="decResultCard" hidden>
+      <h2>Ergebnis</h2>
+      <p class="status" id="decStats"></p>
+      <ul class="msgs" id="decMsgs"></ul>
+      <textarea id="decOutput" readonly spellcheck="false"></textarea>
+      <div class="row">
+        <button class="btn primary wide" id="btnCopyDec">Kopieren</button>
+        <span class="status" id="copyDecStatus" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCHLÜSSEL (für beide Bereiche) ============ -->
+  <div class="card" id="keyCard">
+    <h2>Schlüssel</h2>
+    <p class="status" id="keyStatus">Noch kein Schlüssel vorhanden.</p>
+    <div class="row">
+      <button class="btn" id="btnDownload" disabled>Schlüssel herunterladen</button>
+      <button class="btn" id="btnLoad">Schlüssel laden</button>
+      <input type="file" id="fileKey" accept=".json,application/json">
+    </div>
+    <p class="hint">Der Schlüssel wird beim Verschlüsseln weiterverwendet (auch ein geladener): Bekannte Personen behalten ihr Kürzel, neue bekommen die nächste Nummer.</p>
+    <div class="keybox" id="keyBox" hidden>
+      <table class="key"><thead><tr><th>Kürzel</th><th>Name</th></tr></thead><tbody id="keyBody"></tbody></table>
+    </div>
+    <div class="warnbox">Die Schlüsseldatei enthält die echten Namen. Sicher aufbewahren und <strong>nicht</strong> an Claude oder andere weitergeben.</div>
+    <div class="row">
+      <button class="btn danger" id="btnClearKey" disabled>Schlüssel verwerfen</button>
+      <button class="btn danger" id="btnClearAll">Alles leeren</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- Zustand (nur im Arbeitsspeicher) ----------
+  const state = {
+    key: [],       // aktueller Schlüssel: {num, code, first, last, name}
+    runBase: null, // Schlüssel vor dem letzten Durchlauf (für erneutes Verschlüsseln derselben Eingabe)
+    runInput: null,
+    savedJson: '[]',
+    table: null,   // {header: [], rows: [[]]}
+    cols: [],      // {name: bool, del: bool}
+    colSig: ''
+  };
+  const keySaved = () => JSON.stringify(state.key) === state.savedJson;
+  function resetKey(key) {
+    state.key = key; state.runBase = null; state.runInput = null;
+    state.savedJson = JSON.stringify(key);
+  }
+
+  const PARTICLES = new Set(['von', 'van', 'vom', 'zu', 'zum', 'zur', 'de', 'der', 'den', 'del', 'della', 'di', 'da', 'dos', 'du', 'la', 'le', 'ten', 'ter', 'van der', 'und']);
+  const TITLES = /^(herr|herrn|frau|fr\.|hr\.|dr\.|prof\.)\s+/i;
+
+  // ---------- Hilfsfunktionen ----------
+  const collapse = (s) => String(s || '').normalize('NFC').replace(/\s+/g, ' ').trim();
+  const normPat = (s) => collapse(s).toLowerCase().replace(/\s*,\s*/g, ', ');
+  const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  function splitName(raw) {
+    let s = collapse(raw);
+    while (TITLES.test(s)) s = s.replace(TITLES, '');
+    if (!s) return null;
+    if (s.includes(',')) {
+      const i = s.indexOf(',');
+      const last = s.slice(0, i).trim(), first = s.slice(i + 1).trim();
+      if (last && first) return { first, last };
+      s = (last || first);
+    }
+    const w = s.split(' ');
+    if (w.length === 1) return { first: '', last: w[0] };
+    let i = w.length - 1;
+    while (i > 1 && PARTICLES.has(w[i - 1].toLowerCase())) i--;
+    return { first: w.slice(0, i).join(' '), last: w.slice(i).join(' ') };
+  }
+  const displayName = (first, last) => [first, last].filter(Boolean).join(' ');
+
+  function findOrCreate(key, first, last) {
+    first = collapse(first); last = collapse(last);
+    const name = displayName(first, last);
+    if (!name) return null;
+    const k = normPat(name);
+    let p = key.find((e) => normPat(e.name) === k);
+    if (!p) {
+      const num = key.reduce((m, e) => Math.max(m, e.num), 0) + 1;
+      p = { num, code: 'K' + String(num).padStart(2, '0'), first, last, name };
+      key.push(p);
+    }
+    return p;
+  }
+
+  // ---------- Einlesen ----------
+  function parseDelimited(text, delim) {
+    const rows = []; let row = []; let cell = ''; let i = 0; let inQ = false;
+    text = text.replace(/\r\n?/g, '\n');
+    while (i < text.length) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { cell += '"'; i += 2; continue; }
+          inQ = false; i++; continue;
+        }
+        cell += c; i++; continue;
+      }
+      if (c === '"' && cell === '') { inQ = true; i++; continue; }
+      if (c === delim) { row.push(cell); cell = ''; i++; continue; }
+      if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; i++; continue; }
+      cell += c; i++;
+    }
+    row.push(cell); rows.push(row);
+    const out = rows.filter((r) => r.some((x) => x.trim() !== ''));
+    const width = out.reduce((m, r) => Math.max(m, r.length), 0);
+    out.forEach((r) => { while (r.length < width) r.push(''); });
+    return out;
+  }
+
+  function detectMode(text) {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim() !== '');
+    if (lines.length === 0) return 'text';
+    if (lines.some((l) => l.includes('\t'))) return 'tab';
+    if (lines.length >= 2 && lines[0].includes(';')) {
+      // Semikolons innerhalb von Anführungszeichen nicht mitzählen
+      const count = (l) => l.replace(/"[^"]*"/g, '').split(';').length;
+      const n = count(lines[0]);
+      const same = lines.filter((l) => count(l) === n).length;
+      if (same / lines.length >= 0.6) return 'semi';
+    }
+    return 'text';
+  }
+
+  function currentMode() {
+    const m = $('mode').value;
+    return m === 'auto' ? detectMode($('input').value) : m;
+  }
+
+  // ---------- Spaltenvorschläge ----------
+  const RE_CONTACT = /telefon|^tel\b|tel\.|handy|mobil|fax|mail|iban|bic|bank|konto|stra(ß|ss)e|str\.|adresse|anschrift|hausn|\bplz\b|postleitzahl|^ort$|wohnort|^stadt$|^land$/i;
+  const RE_NAME = /name|mitglied|ansprech|trainer|übungsleiter|uebungsleiter|eltern|erziehungsber|kontaktperson|^kind$|^person$/i;
+  const RE_NOT_NAME = /verein|mannschaft|team|gruppe|kurs|benutzer|datei|firma|abteilung/i;
+  const RE_DEL_OTHER = /geburt|^geb\b|geb\.|^alter$/i;
+  const RE_GROUP = /vor|nach|familien|ruf|^name$/i;
+  const RE_FIRST = /vor|ruf/i;
+
+  function suggest(h) {
+    h = collapse(h);
+    if (RE_CONTACT.test(h)) return { name: false, del: true };
+    if (RE_NAME.test(h) && !RE_NOT_NAME.test(h)) return { name: true, del: false };
+    if (RE_DEL_OTHER.test(h)) return { name: false, del: true };
+    return { name: false, del: false };
+  }
+
+  function nameGroups() {
+    // Vorname/Nachname-Spalten werden zu einer Person zusammengefasst,
+    // jede andere Namensspalte gilt für sich.
+    const header = state.table.header;
+    const nameIdx = state.cols.map((c, i) => (c.name ? i : -1)).filter((i) => i >= 0);
+    const grouped = nameIdx.filter((i) => RE_GROUP.test(collapse(header[i])));
+    const groups = [];
+    if (grouped.length >= 2) {
+      const first = grouped.filter((i) => RE_FIRST.test(header[i]));
+      const last = grouped.filter((i) => !RE_FIRST.test(header[i]));
+      groups.push({ cols: grouped, first, last, combined: true });
+      nameIdx.filter((i) => !grouped.includes(i)).forEach((i) => groups.push({ cols: [i], combined: false }));
+    } else {
+      nameIdx.forEach((i) => groups.push({ cols: [i], combined: false }));
+    }
+    return groups;
+  }
+
+  function refreshInput() {
+    const text = $('input').value;
+    const mode = currentMode();
+    const isTable = mode === 'tab' || mode === 'semi';
+    $('headerWrap').hidden = !isTable;
+    if (!text.trim()) {
+      $('detectStatus').textContent = '';
+      $('colsCard').hidden = true; state.table = null; $('extraNum').textContent = '2.';
+      return;
+    }
+    if (!isTable) {
+      state.table = null;
+      $('colsCard').hidden = true;
+      $('extraNum').textContent = '2.';
+      $('detectStatus').textContent = 'Wird als einfacher Text behandelt. Bitte die zu ersetzenden Namen unten eintragen (oder einen Schlüssel laden).';
+      return;
+    }
+    const rows = parseDelimited(text, mode === 'tab' ? '\t' : ';');
+    const hasHeader = $('hasHeader').checked;
+    const width = rows.length ? rows[0].length : 0;
+    const header = hasHeader ? rows[0].map((h, i) => collapse(h) || ('Spalte ' + (i + 1))) : Array.from({ length: width }, (_, i) => 'Spalte ' + (i + 1));
+    const data = hasHeader ? rows.slice(1) : rows;
+    state.table = { header, rows: data };
+    const sig = mode + '|' + hasHeader + '|' + header.join('\u0001');
+    if (sig !== state.colSig) {
+      state.cols = header.map((h) => (hasHeader ? suggest(h) : { name: false, del: false }));
+      state.colSig = sig;
+    }
+    $('detectStatus').textContent = 'Tabelle erkannt: ' + width + ' Spalten, ' + data.length + ' Zeilen' + (hasHeader ? ' (plus Kopfzeile).' : '.');
+    $('extraNum').textContent = '3.';
+    renderCols();
+  }
+
+  function renderCols() {
+    const box = $('cols');
+    box.textContent = '';
+    const { header, rows } = state.table;
+    header.forEach((h, i) => {
+      const sample = (rows.find((r) => collapse(r[i])) || [])[i] || '';
+      const div = document.createElement('div'); div.className = 'col';
+      const info = document.createElement('div'); info.className = 'info';
+      const hd = document.createElement('div'); hd.className = 'head'; hd.textContent = h;
+      const sm = document.createElement('div'); sm.className = 'sample'; sm.textContent = sample ? 'z. B. ' + collapse(sample) : '(leer)';
+      info.append(hd, sm);
+      const opts = document.createElement('div'); opts.className = 'opts';
+      const mk = (label, prop, cls) => {
+        const l = document.createElement('label'); l.className = 'pill';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = state.cols[i][prop];
+        cb.setAttribute('aria-label', label + ': ' + h);
+        cb.dataset.col = i; cb.dataset.prop = prop;
+        if (cb.checked) l.classList.add(cls);
+        cb.addEventListener('change', () => {
+          state.cols[i][prop] = cb.checked;
+          if (cb.checked) state.cols[i][prop === 'name' ? 'del' : 'name'] = false;
+          renderCols();
+        });
+        l.append(cb, document.createTextNode(label));
+        return l;
+      };
+      opts.append(mk('Name', 'name', 'on-name'), mk('Entfernen', 'del', 'on-del'));
+      div.append(info, opts);
+      box.append(div);
+    });
+    const g = nameGroups().find((x) => x.combined);
+    $('groupHint').textContent = g ? 'Die Spalten „' + g.cols.map((i) => header[i]).join('“ + „') + '“ werden zu einem Kürzel pro Person zusammengefasst.' : '';
+    $('colsCard').hidden = false;
+  }
+
+  // ---------- Ersetzen ----------
+  const RE_EMAIL = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)*\.\p{L}{2,}/gu;
+  const RE_IBAN = /\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,3})?\b/g;
+  const RE_PHONE = /(?<![\p{L}\p{N}+])(?:\+\d{1,3}[ \/-]?(?:\(0\)[ ]?)?|0)\d[\d \/-]{4,}\d(?!\p{N})/gu;
+
+  function buildReplacer(key, msgs) {
+    const map = new Map();
+    const add = (str, code, full) => {
+      const n = normPat(str);
+      if (n.length < 2) return;
+      let e = map.get(n);
+      if (!e) { e = { full: new Set(), tok: new Set() }; map.set(n, e); }
+      (full ? e.full : e.tok).add(code);
+    };
+    for (const p of key) {
+      if (p.first && p.last) {
+        add(p.first + ' ' + p.last, p.code, true);
+        add(p.last + ', ' + p.first, p.code, true);
+        add(p.last + ' ' + p.first, p.code, true);
+        if (p.last.includes(' ')) add(p.last, p.code, false);
+      } else {
+        add(p.name, p.code, true);
+      }
+      for (const w of p.name.split(' ')) {
+        if (w.length >= 2 && !PARTICLES.has(w.toLowerCase())) add(w, p.code, false);
+      }
+    }
+    const lookup = new Map();
+    const byNum = (a, b) => parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10);
+    for (const [n, e] of map) {
+      let codes, isToken = false;
+      if (e.full.size >= 1) codes = [...e.full].sort(byNum);
+      else { codes = [...e.tok].sort(byNum); isToken = true; }
+      if (codes.length > 1 && msgs) {
+        msgs.push('„' + n + '“ passt zu mehreren Personen (' + codes.join(', ') + ') und wird im Freitext durch „' + codes.join('/') + '“ ersetzt.');
+      }
+      lookup.set(n, { codes, isToken });
+    }
+    if (lookup.size === 0) return null;
+    const pats = [...lookup.keys()].sort((a, b) => b.length - a.length)
+      .map((n) => escRe(n).replace(/, /g, ',\\s*').replace(/ /g, '\\s+'));
+    const re = new RegExp('(?<![\\p{L}\\p{N}_])(' + pats.join('|') + ")((?:['’])?s)?(?![\\p{L}\\p{N}_])", 'giu');
+    return { re, lookup };
+  }
+
+  function makeScrubber(rep, contact, counter) {
+    return (s) => {
+      if (!s) return s;
+      if (contact) {
+        s = s.replace(RE_EMAIL, () => { counter.contact++; return '[E-Mail entfernt]'; });
+        s = s.replace(RE_IBAN, () => { counter.contact++; return '[IBAN entfernt]'; });
+        s = s.replace(RE_PHONE, (m) => {
+          if ((m.match(/\d/g) || []).length < 7) return m;
+          counter.contact++; return '[Telefon entfernt]';
+        });
+      }
+      if (rep) {
+        s = s.replace(rep.re, (m, name, suf) => {
+          const e = rep.lookup.get(normPat(name));
+          if (!e) return m;
+          // Einzelne Wörter nur ersetzen, wenn großgeschrieben (z. B. „lange“ ≠ „Lange“)
+          const c0 = name[0];
+          if (e.isToken && c0 === c0.toLowerCase() && c0 !== c0.toUpperCase()) return m;
+          counter.names++;
+          return e.codes.join('/') + (suf || '');
+        });
+      }
+      return s;
+    };
+  }
+
+  const tsvCell = (s) => (/[\t\n"]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s);
+
+  function encrypt() {
+    const text = $('input').value;
+    const msgs = [];
+    if (!text.trim()) { showEnc('', ['Bitte zuerst eine Liste oder einen Text einfügen.'], ''); return; }
+    refreshInput();
+    // Der Schlüssel wächst über die Sitzung. Wird dieselbe Eingabe erneut verschlüsselt
+    // (z. B. mit geänderten Häkchen), ersetzt das den vorigen Versuch.
+    const runInput = text + '\u0000' + $('extraNames').value;
+    if (state.runInput !== runInput || !state.runBase) state.runBase = state.key.map((p) => ({ ...p }));
+    state.runInput = runInput;
+    const key = state.runBase.map((p) => ({ ...p }));
+    const counter = { names: 0, contact: 0 };
+    let out = '';
+    let stats = '';
+
+    let rowCodes = null, groups = [];
+    if (state.table) {
+      groups = nameGroups();
+      if (groups.length === 0) msgs.push('Keine Spalte ist als „Name“ markiert.');
+      rowCodes = state.table.rows.map((r) => groups.map((g) => {
+        if (g.combined) {
+          const first = g.first.map((i) => r[i]).join(' ');
+          const last = g.last.map((i) => r[i]).join(' ');
+          const p = findOrCreate(key, first, last);
+          return p ? p.code : '';
+        }
+        const sp = splitName(r[g.cols[0]]);
+        const p = sp && findOrCreate(key, sp.first, sp.last);
+        return p ? p.code : '';
+      }));
+    }
+
+    // Weitere Namen
+    const known = new Set();
+    key.forEach((p) => { known.add(normPat(p.name)); p.name.split(' ').forEach((w) => known.add(w.toLowerCase())); });
+    $('extraNames').value.split(/\r?\n/).forEach((line) => {
+      const sp = splitName(line);
+      if (!sp) return;
+      const full = normPat(displayName(sp.first, sp.last));
+      if (known.has(full)) return;
+      findOrCreate(key, sp.first, sp.last);
+      known.add(full);
+    });
+
+    const rep = buildReplacer(key, msgs);
+    const scrub = makeScrubber(rep, $('scrubContact').checked, counter);
+
+    if (state.table) {
+      const { header, rows } = state.table;
+      const skip = new Set();
+      const codeAt = new Map(); // Spaltenindex -> Gruppenindex
+      groups.forEach((g, gi) => { codeAt.set(g.cols[0], gi); g.cols.slice(1).forEach((i) => skip.add(i)); });
+      state.cols.forEach((c, i) => { if (c.del) skip.add(i); });
+      const keep = header.map((_, i) => i).filter((i) => !skip.has(i));
+      const outHeader = keep.map((i) => (codeAt.has(i) && groups[codeAt.get(i)].combined ? 'Kürzel' : header[i]));
+      const lines = [outHeader.map(tsvCell).join('\t')];
+      rows.forEach((r, ri) => {
+        lines.push(keep.map((i) => tsvCell(codeAt.has(i) ? rowCodes[ri][codeAt.get(i)] : scrub(r[i]))).join('\t'));
+      });
+      out = lines.join('\n');
+      const removed = state.cols.filter((c) => c.del).length;
+      stats = rows.length + ' Zeilen · ' + key.length + ' Personen im Schlüssel · ' + removed + ' Spalte(n) entfernt · ' +
+        counter.names + ' Namen im Freitext ersetzt' + (counter.contact ? ' · ' + counter.contact + ' Kontaktangaben entfernt' : '');
+    } else {
+      if (key.length === 0) msgs.push('Es sind keine Namen bekannt. Bitte unter „Weitere Namen“ eintragen oder einen Schlüssel laden.');
+      out = scrub(text);
+      stats = counter.names + ' Namen ersetzt · ' + key.length + ' Personen im Schlüssel' + (counter.contact ? ' · ' + counter.contact + ' Kontaktangaben entfernt' : '');
+    }
+
+    state.key = key;
+    renderKey();
+    showEnc(out, msgs, stats);
+  }
+
+  function showEnc(out, msgs, stats) {
+    $('resultCard').hidden = false;
+    $('output').value = out;
+    $('encStats').textContent = stats;
+    renderMsgs($('encMsgs'), msgs);
+    $('copyOutStatus').textContent = '';
+    $('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderMsgs(ul, msgs) {
+    ul.textContent = '';
+    msgs.forEach((m) => { const li = document.createElement('li'); li.textContent = m; ul.append(li); });
+  }
+
+  // ---------- Entschlüsseln ----------
+  function decrypt() {
+    const text = $('decInput').value;
+    const msgs = [];
+    const byNum = new Map(state.key.map((p) => [p.num, p]));
+    const unknown = new Set();
+    let count = 0;
+    if (state.key.length === 0) msgs.push('Kein Schlüssel vorhanden. Bitte zuerst verschlüsseln oder unten „Schlüssel laden“.');
+    const out = text.replace(/(?<![\p{L}\p{N}_])K(\d{1,4})(?!\p{N})/gu, (m, d) => {
+      const p = byNum.get(parseInt(d, 10));
+      if (!p) { unknown.add(m); return m; }
+      count++; return p.name;
+    });
+    if (unknown.size) msgs.push('Nicht im Schlüssel gefunden: ' + [...unknown].join(', '));
+    if (text.trim() && count === 0 && state.key.length) msgs.push('Im Text wurden keine Kürzel gefunden.');
+    $('decResultCard').hidden = false;
+    $('decOutput').value = out;
+    $('decStats').textContent = count + ' Kürzel ersetzt.';
+    renderMsgs($('decMsgs'), msgs);
+    $('copyDecStatus').textContent = '';
+  }
+
+  // ---------- Schlüssel ----------
+  function renderKey() {
+    const n = state.key.length;
+    $('btnDownload').disabled = n === 0;
+    $('btnClearKey').disabled = n === 0;
+    $('keyBox').hidden = n === 0;
+    const body = $('keyBody'); body.textContent = '';
+    [...state.key].sort((a, b) => a.num - b.num).forEach((p) => {
+      const tr = document.createElement('tr');
+      const a = document.createElement('td'); a.textContent = p.code;
+      const b = document.createElement('td'); b.textContent = p.name;
+      tr.append(a, b); body.append(tr);
+    });
+    let s;
+    if (n === 0) s = 'Noch kein Schlüssel vorhanden.';
+    else s = n + ' Einträge.' + (keySaved() ? '' : ' Noch nicht heruntergeladen – ohne Datei kann später nicht entschlüsselt werden.');
+    $('keyStatus').textContent = s;
+    $('keyStatus').className = 'status' + (n && !keySaved() ? ' err' : '');
+    $('decKeyStatus').textContent = n ? 'Schlüssel aktiv: ' + n + ' Einträge.' : 'Kein Schlüssel aktiv – bitte unten laden.';
+  }
+
+  function downloadKey() {
+    const now = new Date();
+    const pad = (x) => String(x).padStart(2, '0');
+    const stamp = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + '_' + pad(now.getHours()) + pad(now.getMinutes());
+    const data = {
+      typ: 'anonymisierer-schluessel',
+      version: 1,
+      erstellt: now.toISOString(),
+      eintraege: [...state.key].sort((a, b) => a.num - b.num).map((p) => ({ kuerzel: p.code, name: p.name, vorname: p.first, nachname: p.last }))
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'schluessel_' + stamp + '.json';
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    state.savedJson = JSON.stringify(state.key);
+    renderKey();
+  }
+
+  function loadKeyFile(file) {
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const data = JSON.parse(r.result);
+        const list = Array.isArray(data) ? data : data.eintraege;
+        if (!Array.isArray(list)) throw new Error('format');
+        const key = [];
+        list.forEach((e) => {
+          const m = /^K(\d{1,4})$/.exec(String(e.kuerzel || '').trim());
+          const name = collapse(e.name);
+          if (!m || !name) throw new Error('eintrag');
+          let first = collapse(e.vorname), last = collapse(e.nachname);
+          if (!first && !last) { const sp = splitName(name); first = sp.first; last = sp.last; }
+          key.push({ num: parseInt(m[1], 10), code: 'K' + m[1], first, last, name });
+        });
+        resetKey(key);
+        renderKey();
+        $('keyStatus').textContent = 'Schlüssel geladen: ' + key.length + ' Einträge.';
+        $('keyStatus').className = 'status ok';
+      } catch (err) {
+        $('keyStatus').textContent = 'Die Datei ist keine gültige Schlüsseldatei.';
+        $('keyStatus').className = 'status err';
+      }
+    };
+    r.readAsText(file);
+  }
+
+  // ---------- Kopieren ----------
+  async function copy(id, statusId) {
+    const ta = $(id);
+    const st = $(statusId);
+    let ok = false;
+    try { await navigator.clipboard.writeText(ta.value); ok = true; } catch (e) {
+      try { ta.focus(); ta.select(); ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+    }
+    st.textContent = ok ? '✓ Kopiert' : 'Kopieren nicht möglich – bitte Text markieren und manuell kopieren.';
+    st.className = 'status ' + (ok ? 'ok' : 'err');
+  }
+
+  // ---------- Ereignisse ----------
+  function selectTab(which) {
+    const enc = which === 'enc';
+    $('tab-enc').setAttribute('aria-selected', String(enc));
+    $('tab-dec').setAttribute('aria-selected', String(!enc));
+    $('panel-enc').hidden = !enc;
+    $('panel-dec').hidden = enc;
+  }
+  $('tab-enc').addEventListener('click', () => selectTab('enc'));
+  $('tab-dec').addEventListener('click', () => selectTab('dec'));
+
+  let t = null;
+  $('input').addEventListener('input', () => { clearTimeout(t); t = setTimeout(refreshInput, 250); });
+  $('mode').addEventListener('change', refreshInput);
+  $('hasHeader').addEventListener('change', refreshInput);
+  $('btnEncrypt').addEventListener('click', encrypt);
+  $('btnDecrypt').addEventListener('click', decrypt);
+  $('btnCopyOut').addEventListener('click', () => copy('output', 'copyOutStatus'));
+  $('btnCopyDec').addEventListener('click', () => copy('decOutput', 'copyDecStatus'));
+  $('btnDownload').addEventListener('click', downloadKey);
+  $('btnLoad').addEventListener('click', () => $('fileKey').click());
+  $('fileKey').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) loadKeyFile(f); e.target.value = ''; });
+  $('btnClearKey').addEventListener('click', () => {
+    if (!confirm('Schlüssel wirklich verwerfen? Ohne gespeicherte Datei lassen sich die Kürzel danach nicht mehr zuordnen.')) return;
+    resetKey([]); renderKey();
+  });
+  $('btnClearAll').addEventListener('click', () => {
+    if (!confirm('Alle Eingaben, Ergebnisse und den Schlüssel löschen?')) return;
+    ['input', 'extraNames', 'output', 'decInput', 'decOutput'].forEach((id) => { $(id).value = ''; });
+    resetKey([]); state.colSig = '';
+    $('resultCard').hidden = true; $('decResultCard').hidden = true;
+    refreshInput(); renderKey();
+  });
+  window.addEventListener('beforeunload', (e) => {
+    if (!keySaved() && state.key.length) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  refreshInput();
+  renderKey();
+})();
+</script>
+</body>
+</html>
